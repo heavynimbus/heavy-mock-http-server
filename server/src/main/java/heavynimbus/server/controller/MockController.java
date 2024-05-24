@@ -1,6 +1,7 @@
 package heavynimbus.server.controller;
 
 import heavynimbus.server.mapper.ResponseMapper;
+import heavynimbus.server.model.Callback;
 import heavynimbus.server.model.Endpoint;
 import heavynimbus.server.model.Model;
 import heavynimbus.server.model.Response;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 @Log4j2
@@ -26,6 +28,7 @@ public class MockController {
 	@RequestMapping("/**")
 	public ResponseEntity<Object> handle(
 			HttpServletRequest request) {
+		long start = (long) request.getAttribute("start");
 		Optional<Endpoint> endpointOpt = model.getEndpoints()
 				.stream()
 				.filter(endpoint -> endpoint.supports(request))
@@ -38,18 +41,25 @@ public class MockController {
 
 		Endpoint endpoint = endpointOpt.get();
 		log.info("Found endpoint: {}", endpoint.getName());
-		Response response = endpoint.getResponse();
-		ResponseEntity<Object> responseEntity = responseMapper.toEntity(response);
 
 		if (endpoint.getCallbacks() != null) {
-			log.info("Registering callbacks: {}", endpoint.getCallbacks());
-			endpoint.getCallbacks().forEach(callbackService::registerCallback);
+			endpoint.getCallbacks().sort(Comparator.comparing(Callback::getDelay));
+			for (Callback callback: endpoint.getCallbacks()) {
+				if (callback.isAsync()) {
+					callbackService.registerCallback(start, callback);
+					continue;
+				}
+				DelayUtils.delayExactly(start, callback.getDelay());
+				callbackService.doCallback(callback);
+			}
 		}
+
+		Response response = endpoint.getResponse();
+		ResponseEntity<Object> responseEntity = responseMapper.toEntity(request, response);
 
 		if (response.getDelay() == null) {
 			return responseEntity;
 		}
-		long start = (Long) request.getAttribute("start");
 		DelayUtils.delayExactly(start, response.getDelay());
 		return responseEntity;
 	}

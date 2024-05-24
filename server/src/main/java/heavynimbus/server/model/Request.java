@@ -3,17 +3,13 @@ package heavynimbus.server.model;
 import heavynimbus.server.util.QueryParser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.util.MultiValueMap;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -26,9 +22,9 @@ public class Request {
 	@NotNull
 	private List<String> paths;
 
-	private Map<@NotNull String, @NotNull List<String>> headers;
+	private Map<@NotNull String, @NotNull String> headers;
 
-	private Map<@NotNull String, @NotNull List<String>> query;
+	private Map<@NotNull String, String> query;
 
 	public boolean supports(HttpServletRequest request) {
 		boolean anyMethodMatches = methods.stream()
@@ -42,10 +38,9 @@ public class Request {
 
 		if (headers != null) {
 			for (String key : headers.keySet()) {
-				List<String> expectedHeaderValues = headers.get(key);
-				List<String> requestHeaderValues = List.of(request.getHeader(key));
-				if (requestHeaderValues.size() < expectedHeaderValues.size()) return false;
-				if (!new HashSet<>(requestHeaderValues).containsAll(expectedHeaderValues)) return false;
+				String expectedHeaderValue = headers.get(key);
+				String requestHeaderValue = request.getHeader(key);
+				if (!Objects.equals(expectedHeaderValue, requestHeaderValue)) return false;
 			}
 		}
 
@@ -55,14 +50,15 @@ public class Request {
 
 		String requestQueryString = request.getQueryString();
 		MultiValueMap<String, String> requestQueryMap = QueryParser.parse(requestQueryString);
+
 		Set<String> requestQueryKeys = requestQueryMap.keySet();
-		if (!query.keySet().containsAll(requestQueryKeys)) return false;
+		if (!requestQueryKeys.containsAll(query.keySet())) return false;
 
 		for (String key : query.keySet()) {
-			List<String> expectedQueryValues = query.get(key);
-			List<String> requestQueryValues = requestQueryMap.get(key);
-			if (requestQueryValues.size() < expectedQueryValues.size()) return false;
-			if (!new HashSet<>(requestQueryValues).containsAll(expectedQueryValues)) return false;
+			String expectedValue = query.get(key);
+			List<String> requestValues = requestQueryMap.get(key);
+			if (requestValues == null) return false;
+			if (!requestValues.contains(expectedValue)) return false;
 		}
 
 		return true;

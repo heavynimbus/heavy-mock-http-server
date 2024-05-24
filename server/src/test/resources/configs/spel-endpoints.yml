@@ -1,0 +1,63 @@
+# Declaration of endpoints
+endpoints:
+  - name: SpEL Request
+    # If the request matches the following criteria, the response will be returned
+    request:
+      methods:
+        - GET
+      paths:
+        - /hello/request # This is a regular expression
+      headers:
+        Accept:
+          - application/json
+
+    # The response to be returned
+    response:
+      status: OK
+      headers:
+        "Content-Type":
+          - application/json
+      body:
+        content: |
+          {
+            path: request.path,
+            method: request.method,
+            query: request.query,
+            headers: request.headers,
+            message: (request.query['lang'][0] == 'fr' ? 'Bonjour, ' : 'Hello, ') + request.query['name'][0] + '!'
+          }
+
+  - name: SpEL Callback
+    # If the request matches the following criteria, the response will be returned
+    request:
+      methods:
+        - GET
+      paths:
+        - /hello/callback # This is a regular expression
+      headers:
+        Accept:
+          - application/json
+
+#    callbacks:
+#      url: /hello/callback
+#      method: GET
+#      headers:
+#        Accept:
+#          - application/json
+#      query:
+#        lang:
+#          - fr
+#        name:
+#          - John
+
+    # The response to be returned
+    response:
+      status: OK
+      headers:
+        "Content-Type":
+          - application/json
+      body:
+        content: |
+          {
+            callback: callbacks[0]
+          }

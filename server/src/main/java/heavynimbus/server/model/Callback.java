@@ -14,7 +14,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -34,7 +36,7 @@ public class Callback {
 	@Valid
 	private Body body;
 
-	private Map<@NotNull String, String> headers;
+	private Map<@NotNull String, List<@NotNull String>> headers;
 
 	@NotNull
 	private HttpClient.Version httpVersion = HttpClient.Version.HTTP_1_1;
@@ -55,7 +57,7 @@ public class Callback {
 				.version(httpVersion)
 				.timeout(connectTimeout);
 		if (headers != null) {
-			headers.forEach(builder::header);
+			headers.forEach((key, val) -> builder.setHeader(key, String.join(",", val)));
 		}
 		return builder.build();
 	}

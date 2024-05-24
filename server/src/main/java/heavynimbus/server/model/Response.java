@@ -20,8 +20,10 @@ import java.util.Map;
 @AllArgsConstructor
 public class Response {
 	@Min(0)
-	private Long delay;
+	@NotNull
+	private Long delay = 0L;
 
+	@NotNull
 	private HttpStatus status = HttpStatus.OK;
 
 	private Map<@NotNull String, @NotNull List<String>> headers;

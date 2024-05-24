@@ -18,14 +18,15 @@ public class CallbackService {
 
 	private final ExecutorService executorService;
 
-	public void registerCallback(Callback callback) {
+	public void registerCallback(long start, Callback callback) {
 		executorService.submit(() -> {
-			DelayUtils.delay(callback.getDelay());
-			sendCallback(callback);
+			log.info("Registering async callback: " + callback.getUrl());
+			DelayUtils.delayExactly(start, callback.getDelay());
+			doCallback(callback);
 		});
 	}
 
-	private void sendCallback(Callback callback) {
+	public void doCallback(Callback callback) {
 		HttpResponse<String> response;
 		try (HttpClient client = callback.toHttpClient()) {
 			response = client.send(callback.toHttpRequest(), HttpResponse.BodyHandlers.ofString());

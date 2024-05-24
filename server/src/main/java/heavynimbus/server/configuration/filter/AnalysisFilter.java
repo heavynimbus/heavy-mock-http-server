@@ -38,6 +38,7 @@ public class AnalysisFilter extends OncePerRequestFilter {
 
 		long end = System.currentTimeMillis();
 		log.info("Request: {} {}{} took {}ms", request.getMethod(), request.getRequestURI(), query, end - start);;
+		log.info("Response status: {}", response.getStatus());
 		TrackIdHighlighting.clearTrackId();
 	}
 }

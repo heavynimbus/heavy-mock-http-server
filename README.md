@@ -47,8 +47,8 @@ services:
 
 ## 🛠️ Configuration
 
-
 *Definition*:
+
 ```yaml
 endpoints:
   - name: <string>
@@ -59,14 +59,14 @@ endpoints:
         - <regex>
       headers:
         <string>: <string>
-        
+
     response:
       delay: <integer> # In milliseconds
       status: <HTTP_STATUS> # OK | CREATED | BAD_REQUEST | ...
       headers:
         <string1>:
           - <string>
-      
+
       body: # Only one field of body can be used
         # You can use the | character to write a multiline string
         string: <string>
@@ -81,7 +81,7 @@ endpoints:
         proxy:
           host: <string>
           port: <integer>
-        
+
         url: <string>
         method: GET | POST | PUT | DELETE | PATCH | OPTIONS | HEAD # Default is GET
         headers:
@@ -89,71 +89,22 @@ endpoints:
         body:
           string: <string>
           file: <string>
-        
 ```
 
+```mermaid
+sequenceDiagram
+    actor c as Client
+    participant HM as Heavy Mock
+    c ->> HM: Request
+    HM ->> HM: Find matching endpoint
+    create participant Callback as Sync Callback
+    HM ->> Callback: Request
 
-*Simple Example*:
-```yaml
-# Your HEAVY_MOCK_CONFIG file
+    par
+        create participant AsyncCallback as Async Callback
+        HM ->> AsyncCallback: Request
+    end
 
-# Declaration of endpoints
-endpoints:
-  # First endpoint
-  - name: Get Hello Heavy
-    # If the request matches the following criteria, the response will be returned
-    request:
-      methods:
-        - GET
-      paths:
-        - /hello/heavy
-
-    # The response to be returned
-    response:
-      status: OK
-      headers:
-        "Content-Type":
-          - application/json
-      body: |
-        {
-        "message": "Hello, Heavy!"
-        }
-
-  - name: Get Hello for any other path
-    # If the request matches the following criteria, the response will be returned
-    request:
-      methods:
-        - GET
-      paths:
-        - /hello/.* # This is a regular expression
-
-    # The response to be returned
-    response:
-      status: OK
-      headers:
-        "Content-Type":
-          - application/json
-      body: |
-        {
-          "message": "Hello, World!"
-        }
-
-  - name: 404 Not Found
-    # If the request matches the following criteria, the response will be returned
-    request:
-      methods:
-        - GET
-      paths:
-        - /not-found
-
-    # The response to be returned
-    response:
-      status: NOT_FOUND
-      headers:
-        "Content-Type":
-          - application/json
-      body: |
-        {
-          "message": "Not Found"
-        }
+    Callback -->> HM: Response
+    HM -->> c: Response
 ```

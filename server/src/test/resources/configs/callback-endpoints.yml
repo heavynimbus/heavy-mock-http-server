@@ -1,0 +1,34 @@
+# Declaration of endpoints
+endpoints:
+  - name: Simple callback
+
+    # If the request matches the following criteria, the response will be returned
+    request:
+      methods:
+        - GET
+      paths:
+        - /callback/simple # This is a regular expression
+
+    callbacks:
+      - url: https://httpbin.org/get
+        method: GET
+
+    # The response to be returned
+    response:
+      status: OK
+      headers:
+        "Content-Type":
+          - application/json
+      body:
+        content: |
+          {
+            "message": "Hello, Heavy!"
+          }
+
+  - name: Delayed callback
+    request:
+      methods:
+        - GET
+      paths:
+        - /callback/delayed # This is a regular expression
+
